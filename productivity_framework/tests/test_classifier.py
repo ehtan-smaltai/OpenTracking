@@ -1,8 +1,7 @@
 """Tests for the main classifier pipeline."""
 
-import pytest
-from productivity_framework.types import ConversationMessage, ActivityType, OutputType
 from productivity_framework.classifier import ProductivityClassifier
+from productivity_framework.types import ActivityType, ConversationMessage
 
 
 def _msg(role, content, tool_calls=None):
@@ -96,7 +95,11 @@ class TestProductivityClassifier:
     def test_token_metrics_propagated(self):
         messages = [
             _msg("user", "Send an email to the team about the project update"),
-            _msg("assistant", "I've drafted and sent the email with the project status.", tool_calls=["send_email"]),
+            _msg(
+                "assistant",
+                "I've drafted and sent the email with the project status.",
+                tool_calls=["send_email"],
+            ),
         ]
         result = self.classifier.classify(messages, "token-test")
         assert result.total_output_tokens > 0
@@ -104,43 +107,58 @@ class TestProductivityClassifier:
         assert result.prose_output_tokens > 0
 
     def test_batch_classification(self):
-        conv1 = ("c1", [
-            _msg("user", "Send email"),
-            _msg("assistant", "Sent!", tool_calls=["send_email"]),
-        ])
-        conv2 = ("c2", [
-            _msg("user", "Hey"),
-            _msg("assistant", "Hi!"),
-            _msg("user", "Just testing"),
-            _msg("assistant", "Ok!"),
-            _msg("user", "Yep"),
-            _msg("assistant", "Sure"),
-            _msg("user", "Bye"),
-            _msg("assistant", "Goodbye!"),
-        ])
-        results = self.classifier.classify_batch([conv1, conv2])
-        assert len(results) == 2
-
-    def test_aggregate_time_saved(self):
-        conversations = [
-            ("c1", [
+        conv1 = (
+            "c1",
+            [
                 _msg("user", "Send email"),
                 _msg("assistant", "Sent!", tool_calls=["send_email"]),
-            ]),
-            ("c2", [
-                _msg("user", "Create doc"),
-                _msg("assistant", "Created!", tool_calls=["create_doc"]),
-            ]),
-            ("c3", [
+            ],
+        )
+        conv2 = (
+            "c2",
+            [
                 _msg("user", "Hey"),
                 _msg("assistant", "Hi!"),
-                _msg("user", "Just chatting"),
+                _msg("user", "Just testing"),
                 _msg("assistant", "Ok!"),
                 _msg("user", "Yep"),
                 _msg("assistant", "Sure"),
                 _msg("user", "Bye"),
                 _msg("assistant", "Goodbye!"),
-            ]),
+            ],
+        )
+        results = self.classifier.classify_batch([conv1, conv2])
+        assert len(results) == 2
+
+    def test_aggregate_time_saved(self):
+        conversations = [
+            (
+                "c1",
+                [
+                    _msg("user", "Send email"),
+                    _msg("assistant", "Sent!", tool_calls=["send_email"]),
+                ],
+            ),
+            (
+                "c2",
+                [
+                    _msg("user", "Create doc"),
+                    _msg("assistant", "Created!", tool_calls=["create_doc"]),
+                ],
+            ),
+            (
+                "c3",
+                [
+                    _msg("user", "Hey"),
+                    _msg("assistant", "Hi!"),
+                    _msg("user", "Just chatting"),
+                    _msg("assistant", "Ok!"),
+                    _msg("user", "Yep"),
+                    _msg("assistant", "Sure"),
+                    _msg("user", "Bye"),
+                    _msg("assistant", "Goodbye!"),
+                ],
+            ),
         ]
         results = self.classifier.classify_batch(conversations)
         summary = self.classifier.aggregate_time_saved(results)

@@ -63,19 +63,20 @@ class Tracker:
         return entries
 
     def _filter_by_date(
-        self, entries: list[dict], start: datetime, end: datetime | None = None,
+        self,
+        entries: list[dict],
+        start: datetime,
+        end: datetime | None = None,
     ) -> list[dict]:
         """Filter entries by date range."""
         end = end or datetime.now()
         start_str = start.strftime("%Y-%m-%d")
         end_str = end.strftime("%Y-%m-%d")
-        return [
-            e for e in entries
-            if start_str <= e.get("date", "") <= end_str
-        ]
+        return [e for e in entries if start_str <= e.get("date", "") <= end_str]
 
     def summary(
-        self, period: str = "week",
+        self,
+        period: str = "week",
     ) -> dict[str, Any]:
         """
         Summarize productivity history for a given period.
@@ -124,10 +125,7 @@ class Tracker:
     def _aggregate(self, entries: list[dict], period: str) -> dict[str, Any]:
         """Aggregate a list of history entries into a summary."""
         casual_types = {"casual"}
-        productive = [
-            e for e in entries
-            if e.get("overall_activity") not in casual_types
-        ]
+        productive = [e for e in entries if e.get("overall_activity") not in casual_types]
 
         total_saved = sum(e.get("time_saved_minutes", 0) for e in entries)
 

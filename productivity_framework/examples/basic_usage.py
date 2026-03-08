@@ -4,11 +4,12 @@ Basic usage example for the AI Productivity Measurement Framework.
 No API key needed — runs entirely with the rule engine (Layer 1 + 2).
 """
 
-import sys
 import os
+import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from productivity_framework import ProductivityClassifier, ConversationMessage
+from productivity_framework import ConversationMessage, ProductivityClassifier
 
 
 def main():
@@ -87,7 +88,9 @@ def main():
         ConversationMessage(role="user", content="Nah just chatting"),
         ConversationMessage(role="assistant", content="Sure, happy to chat!"),
         ConversationMessage(role="user", content="Tell me something interesting"),
-        ConversationMessage(role="assistant", content="Did you know that octopuses have three hearts?"),
+        ConversationMessage(
+            role="assistant", content="Did you know that octopuses have three hearts?"
+        ),
     ]
 
     result = classifier.classify(messages, "casual-example")
@@ -102,28 +105,44 @@ def main():
     print("=" * 50)
 
     all_conversations = [
-        ("email-1", [
-            ConversationMessage(role="user", content="Send the weekly report"),
-            ConversationMessage(role="assistant", content="Sent!", tool_calls=["send_email"]),
-        ]),
-        ("doc-1", [
-            ConversationMessage(role="user", content="Create meeting notes"),
-            ConversationMessage(role="assistant", content="Created!", tool_calls=["create_doc"]),
-        ]),
-        ("sheet-1", [
-            ConversationMessage(role="user", content="Update the budget spreadsheet"),
-            ConversationMessage(role="assistant", content="Updated!", tool_calls=["google_sheets_create"]),
-        ]),
-        ("casual-1", [
-            ConversationMessage(role="user", content="Hey"),
-            ConversationMessage(role="assistant", content="Hi!"),
-            ConversationMessage(role="user", content="Nothing"),
-            ConversationMessage(role="assistant", content="Ok!"),
-            ConversationMessage(role="user", content="Bye"),
-            ConversationMessage(role="assistant", content="Bye!"),
-            ConversationMessage(role="user", content="Wait"),
-            ConversationMessage(role="assistant", content="Yes?"),
-        ]),
+        (
+            "email-1",
+            [
+                ConversationMessage(role="user", content="Send the weekly report"),
+                ConversationMessage(role="assistant", content="Sent!", tool_calls=["send_email"]),
+            ],
+        ),
+        (
+            "doc-1",
+            [
+                ConversationMessage(role="user", content="Create meeting notes"),
+                ConversationMessage(
+                    role="assistant", content="Created!", tool_calls=["create_doc"]
+                ),
+            ],
+        ),
+        (
+            "sheet-1",
+            [
+                ConversationMessage(role="user", content="Update the budget spreadsheet"),
+                ConversationMessage(
+                    role="assistant", content="Updated!", tool_calls=["google_sheets_create"]
+                ),
+            ],
+        ),
+        (
+            "casual-1",
+            [
+                ConversationMessage(role="user", content="Hey"),
+                ConversationMessage(role="assistant", content="Hi!"),
+                ConversationMessage(role="user", content="Nothing"),
+                ConversationMessage(role="assistant", content="Ok!"),
+                ConversationMessage(role="user", content="Bye"),
+                ConversationMessage(role="assistant", content="Bye!"),
+                ConversationMessage(role="user", content="Wait"),
+                ConversationMessage(role="assistant", content="Yes?"),
+            ],
+        ),
     ]
 
     results = classifier.classify_batch(all_conversations)
@@ -133,7 +152,9 @@ def main():
     print(f"Productive: {summary['productive_conversations']}")
     print(f"Productivity rate: {summary['productivity_rate']:.0%}")
     print(f"Total time saved: {summary['total_time_saved_minutes']} min")
-    print(f"Time saved range: {summary['time_saved_range_minutes'][0]}-{summary['time_saved_range_minutes'][1]} min")
+    print(
+        f"Time saved range: {summary['time_saved_range_minutes'][0]}-{summary['time_saved_range_minutes'][1]} min"
+    )
     print(f"LLM classifications used: {summary['llm_classifications']}")
     print(f"Total output tokens: {summary['total_output_tokens']}")
     print(f"Avg output tokens/conversation: {summary['avg_output_tokens_per_conversation']}")

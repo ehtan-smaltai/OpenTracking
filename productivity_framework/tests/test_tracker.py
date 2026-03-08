@@ -1,11 +1,6 @@
 """Tests for the history tracker."""
 
 import json
-import tempfile
-from datetime import datetime, timedelta
-from pathlib import Path
-
-import pytest
 
 from productivity_framework.tracker import Tracker
 from productivity_framework.types import ActivityType, ClassificationResult
@@ -76,12 +71,14 @@ class TestTracker:
         tracker = Tracker(history_dir=str(tmp_path))
         tracker.log(_make_result(conv_id="a", time_saved=600))  # 10 min
         tracker.log(_make_result(conv_id="b", time_saved=900))  # 15 min
-        tracker.log(_make_result(
-            conv_id="c",
-            activity=ActivityType.CASUAL,
-            time_saved=0,
-            outputs=[],
-        ))
+        tracker.log(
+            _make_result(
+                conv_id="c",
+                activity=ActivityType.CASUAL,
+                time_saved=0,
+                outputs=[],
+            )
+        )
 
         s = tracker.summary(period="all")
         assert s["total_conversations"] == 3

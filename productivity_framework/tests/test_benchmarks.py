@@ -1,8 +1,7 @@
 """Tests for the benchmark table."""
 
-import pytest
-from productivity_framework.types import OutputType
 from productivity_framework.benchmark_table import BenchmarkTable
+from productivity_framework.types import OutputType
 
 
 class TestBenchmarkTable:
@@ -18,8 +17,8 @@ class TestBenchmarkTable:
 
     def test_get_time_for_output(self):
         low, mid, high = self.table.get_time_for_output(OutputType.EMAIL)
-        assert low == 180   # 3 min
-        assert mid == 420   # 7 min
+        assert low == 180  # 3 min
+        assert mid == 420  # 7 min
         assert high == 900  # 15 min
 
     def test_get_default_time_low(self):

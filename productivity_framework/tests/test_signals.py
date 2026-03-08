@@ -1,8 +1,7 @@
 """Tests for Layer 1: Signal Extraction."""
 
-import pytest
-from productivity_framework.types import ConversationMessage
 from productivity_framework.signals import extract_signals
+from productivity_framework.types import ConversationMessage
 
 
 def _msg(role, content, tool_calls=None):
@@ -118,7 +117,9 @@ class TestSignalExtraction:
     def test_explicit_token_counts(self):
         messages = [
             ConversationMessage(role="user", content="Hello", token_count=50),
-            ConversationMessage(role="assistant", content="Hi there", token_count=200, timestamp=1000.0),
+            ConversationMessage(
+                role="assistant", content="Hi there", token_count=200, timestamp=1000.0
+            ),
         ]
         signal = extract_signals(messages)
         assert signal.total_input_tokens == 50
@@ -127,7 +128,10 @@ class TestSignalExtraction:
     def test_code_vs_prose_tokens(self):
         messages = [
             _msg("user", "Write code"),
-            _msg("assistant", "Here is some explanation text.\n```python\ndef hello():\n    print('hello world')\n    return True\n```\nThat should work."),
+            _msg(
+                "assistant",
+                "Here is some explanation text.\n```python\ndef hello():\n    print('hello world')\n    return True\n```\nThat should work.",
+            ),
         ]
         signal = extract_signals(messages)
         assert signal.code_output_tokens > 0

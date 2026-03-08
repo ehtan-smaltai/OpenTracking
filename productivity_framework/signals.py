@@ -8,8 +8,8 @@ Zero cost - no API calls, pure computation.
 from __future__ import annotations
 
 import re
-from .types import ConversationMessage, Signal
 
+from .types import ConversationMessage, Signal
 
 # Approximate token estimation: ~4 chars per token for English text.
 # This avoids requiring tiktoken or a tokenizer dependency.
@@ -33,58 +33,142 @@ REFINEMENT_PATTERNS = [
 # Domain keyword categories
 DOMAIN_KEYWORDS = {
     "finance": [
-        "revenue", "profit", "margin", "ebitda", "forecast", "budget",
-        "roi", "cash flow", "valuation", "p&l", "balance sheet",
-        "quarterly", "fiscal", "earnings", "dividend",
+        "revenue",
+        "profit",
+        "margin",
+        "ebitda",
+        "forecast",
+        "budget",
+        "roi",
+        "cash flow",
+        "valuation",
+        "p&l",
+        "balance sheet",
+        "quarterly",
+        "fiscal",
+        "earnings",
+        "dividend",
     ],
     "marketing": [
-        "campaign", "conversion", "funnel", "leads", "brand", "seo",
-        "content strategy", "audience", "engagement", "ctr", "impression",
-        "social media", "marketing",
+        "campaign",
+        "conversion",
+        "funnel",
+        "leads",
+        "brand",
+        "seo",
+        "content strategy",
+        "audience",
+        "engagement",
+        "ctr",
+        "impression",
+        "social media",
+        "marketing",
     ],
     "engineering": [
-        "api", "deploy", "bug", "feature", "sprint", "pull request",
-        "database", "architecture", "refactor", "ci/cd", "testing",
-        "endpoint", "microservice",
+        "api",
+        "deploy",
+        "bug",
+        "feature",
+        "sprint",
+        "pull request",
+        "database",
+        "architecture",
+        "refactor",
+        "ci/cd",
+        "testing",
+        "endpoint",
+        "microservice",
     ],
     "legal": [
-        "contract", "compliance", "regulation", "liability", "nda",
-        "terms", "clause", "intellectual property", "patent", "lawsuit",
+        "contract",
+        "compliance",
+        "regulation",
+        "liability",
+        "nda",
+        "terms",
+        "clause",
+        "intellectual property",
+        "patent",
+        "lawsuit",
     ],
     "hr": [
-        "hiring", "onboarding", "performance review", "compensation",
-        "benefits", "retention", "employee", "recruitment", "job description",
+        "hiring",
+        "onboarding",
+        "performance review",
+        "compensation",
+        "benefits",
+        "retention",
+        "employee",
+        "recruitment",
+        "job description",
     ],
     "sales": [
-        "pipeline", "quota", "deal", "prospect", "crm", "close rate",
-        "objection", "proposal", "pricing", "negotiation",
+        "pipeline",
+        "quota",
+        "deal",
+        "prospect",
+        "crm",
+        "close rate",
+        "objection",
+        "proposal",
+        "pricing",
+        "negotiation",
     ],
     "operations": [
-        "process", "workflow", "efficiency", "supply chain", "logistics",
-        "inventory", "vendor", "procurement", "sop",
+        "process",
+        "workflow",
+        "efficiency",
+        "supply chain",
+        "logistics",
+        "inventory",
+        "vendor",
+        "procurement",
+        "sop",
     ],
 }
 
 # External action tool patterns (tools that affect the outside world)
 EXTERNAL_ACTION_PATTERNS = [
-    "send_email", "gmail_send", "outlook_send",
-    "post_message", "slack_send", "telegram_send",
-    "create_event", "schedule_meeting", "calendar_create",
-    "upload_file", "drive_upload", "s3_upload",
-    "publish", "deploy", "push",
-    "create_task", "create_issue",
-    "update_record", "insert_record",
-    "tweet", "post_social",
+    "send_email",
+    "gmail_send",
+    "outlook_send",
+    "post_message",
+    "slack_send",
+    "telegram_send",
+    "create_event",
+    "schedule_meeting",
+    "calendar_create",
+    "upload_file",
+    "drive_upload",
+    "s3_upload",
+    "publish",
+    "deploy",
+    "push",
+    "create_task",
+    "create_issue",
+    "update_record",
+    "insert_record",
+    "tweet",
+    "post_social",
 ]
 
 # Artifact-producing tool patterns
 ARTIFACT_PATTERNS = [
-    "create_doc", "google_docs_create", "word_create",
-    "create_spreadsheet", "google_sheets_create", "excel_create",
-    "create_presentation", "google_slides_create", "powerpoint_create",
-    "generate_chart", "create_chart",
-    "generate_pdf", "create_pdf",
-    "write_file", "save_file",
+    "create_doc",
+    "google_docs_create",
+    "word_create",
+    "create_spreadsheet",
+    "google_sheets_create",
+    "excel_create",
+    "create_presentation",
+    "google_slides_create",
+    "powerpoint_create",
+    "generate_chart",
+    "create_chart",
+    "generate_pdf",
+    "create_pdf",
+    "write_file",
+    "save_file",
 ]
 
 
@@ -117,14 +201,12 @@ def extract_signals(messages: list[ConversationMessage]) -> Signal:
 
     # External actions
     signal.external_actions = [
-        tc for tc in all_tool_calls
-        if any(pat in tc.lower() for pat in EXTERNAL_ACTION_PATTERNS)
+        tc for tc in all_tool_calls if any(pat in tc.lower() for pat in EXTERNAL_ACTION_PATTERNS)
     ]
 
     # Artifacts produced
     signal.artifacts_produced = [
-        tc for tc in all_tool_calls
-        if any(pat in tc.lower() for pat in ARTIFACT_PATTERNS)
+        tc for tc in all_tool_calls if any(pat in tc.lower() for pat in ARTIFACT_PATTERNS)
     ]
 
     # User message stats
@@ -183,9 +265,7 @@ def extract_signals(messages: list[ConversationMessage]) -> Signal:
     signal.total_tokens = signal.total_input_tokens + signal.total_output_tokens
 
     if assistant_messages:
-        signal.output_tokens_per_message = (
-            signal.total_output_tokens / len(assistant_messages)
-        )
+        signal.output_tokens_per_message = signal.total_output_tokens / len(assistant_messages)
 
     # Split output tokens into code vs prose
     if assistant_messages:

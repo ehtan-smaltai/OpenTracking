@@ -16,8 +16,8 @@ import json
 import sys
 from pathlib import Path
 
-from .classifier import ProductivityClassifier
 from .benchmark_table import BenchmarkTable
+from .classifier import ProductivityClassifier
 from .tracker import Tracker
 from .types import ConversationMessage
 
@@ -30,13 +30,15 @@ def _load_conversation(path: Path) -> tuple[str, list[ConversationMessage]]:
     conv_id = data.get("conversation_id", path.stem)
     messages = []
     for msg in data.get("messages", []):
-        messages.append(ConversationMessage(
-            role=msg["role"],
-            content=msg["content"],
-            tool_calls=msg.get("tool_calls", []),
-            tool_results=msg.get("tool_results", []),
-            token_count=msg.get("token_count", 0),
-        ))
+        messages.append(
+            ConversationMessage(
+                role=msg["role"],
+                content=msg["content"],
+                tool_calls=msg.get("tool_calls", []),
+                tool_results=msg.get("tool_results", []),
+                token_count=msg.get("token_count", 0),
+            )
+        )
 
     return conv_id, messages
 
@@ -60,7 +62,8 @@ def main(argv: list[str] | None = None) -> int:
         help="JSON file or directory of JSON files to classify",
     )
     parser.add_argument(
-        "--output", "-o",
+        "--output",
+        "-o",
         help="Output file for results (default: stdout)",
     )
     parser.add_argument(
@@ -157,7 +160,9 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"Outputs:     {', '.join(r.outputs)}")
             if r.actions_performed:
                 print(f"Actions:     {', '.join(r.actions_performed)}")
-            print(f"Tokens:      {r.total_output_tokens} output ({r.code_output_tokens} code, {r.prose_output_tokens} prose)")
+            print(
+                f"Tokens:      {r.total_output_tokens} output ({r.code_output_tokens} code, {r.prose_output_tokens} prose)"
+            )
     else:
         # Multiple conversations or file output
         summary = classifier.aggregate_time_saved(results)
@@ -172,16 +177,22 @@ def main(argv: list[str] | None = None) -> int:
             Path(args.output).write_text(output_json)
             print(f"Results written to {args.output}")
             print(f"  {summary['total_conversations']} conversations")
-            print(f"  {summary['productive_conversations']} productive ({summary['productivity_rate']:.0%})")
+            print(
+                f"  {summary['productive_conversations']} productive ({summary['productivity_rate']:.0%})"
+            )
             print(f"  {summary['total_time_saved_minutes']} min saved")
         else:
             if args.json_output:
                 print(output_json)
             else:
                 print(f"Conversations:  {summary['total_conversations']}")
-                print(f"Productive:     {summary['productive_conversations']} ({summary['productivity_rate']:.0%})")
+                print(
+                    f"Productive:     {summary['productive_conversations']} ({summary['productivity_rate']:.0%})"
+                )
                 print(f"Time saved:     {summary['total_time_saved_minutes']} min")
-                print(f"Range:          {summary['time_saved_range_minutes'][0]}-{summary['time_saved_range_minutes'][1]} min")
+                print(
+                    f"Range:          {summary['time_saved_range_minutes'][0]}-{summary['time_saved_range_minutes'][1]} min"
+                )
                 print(f"LLM calls:      {summary['llm_classifications']}")
                 print(f"Total tokens:   {summary['total_tokens']}")
                 print()
@@ -307,7 +318,9 @@ def _print_comparison(data: dict) -> None:
 
     _row("Conversations", this_w["total_conversations"], last_w["total_conversations"])
     _row("Productive", this_w["productive_conversations"], last_w["productive_conversations"])
-    _row("Time saved", this_w["total_time_saved_minutes"], last_w["total_time_saved_minutes"], " min")
+    _row(
+        "Time saved", this_w["total_time_saved_minutes"], last_w["total_time_saved_minutes"], " min"
+    )
 
     this_rate = f"{this_w['productivity_rate']:.0%}"
     last_rate = f"{last_w['productivity_rate']:.0%}"

@@ -7,7 +7,6 @@ Loads defaults from YAML, allows user overrides.
 
 from __future__ import annotations
 
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -21,9 +20,9 @@ from .types import OutputType
 class TimeBenchmark:
     """Time estimate for a task type."""
 
-    low: int = 0       # seconds
-    mid: int = 0       # seconds
-    high: int = 0      # seconds
+    low: int = 0  # seconds
+    mid: int = 0  # seconds
+    high: int = 0  # seconds
     description: str = ""
 
 
@@ -65,7 +64,7 @@ class BenchmarkTable:
         if not path.exists():
             return
 
-        with open(path, "r") as f:
+        with open(path) as f:
             data = yaml.safe_load(f)
 
         if not data:

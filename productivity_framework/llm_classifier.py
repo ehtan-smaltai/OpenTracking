@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
-from typing import Any
 
 from .types import ActivityType, OutputType, Signal
 
@@ -183,9 +182,7 @@ async def classify_with_llm_openai(
         response_text = response.choices[0].message.content or ""
         result = parse_llm_response(response_text)
         if response.usage:
-            result.tokens_used = (
-                response.usage.prompt_tokens + response.usage.completion_tokens
-            )
+            result.tokens_used = response.usage.prompt_tokens + response.usage.completion_tokens
         return result
 
     except Exception:
@@ -232,6 +229,7 @@ def classify_with_llm_sync(
     if loop and loop.is_running():
         # We're already in an async context, create a new thread
         import concurrent.futures
+
         with concurrent.futures.ThreadPoolExecutor() as pool:
             result = pool.submit(asyncio.run, coro).result()
         return result

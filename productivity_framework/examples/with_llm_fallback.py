@@ -6,9 +6,10 @@ Requires an API key (Anthropic or OpenAI).
 
 import os
 import sys
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "../.."))
 
-from productivity_framework import ProductivityClassifier, ConversationMessage
+from productivity_framework import ConversationMessage, ProductivityClassifier
 
 
 def main():
@@ -22,8 +23,8 @@ def main():
     # Without API key: rules-only mode
     classifier = ProductivityClassifier(
         api_key=api_key,
-        provider="anthropic",      # or "openai"
-        estimate_mode="low",       # conservative estimates
+        provider="anthropic",  # or "openai"
+        estimate_mode="low",  # conservative estimates
     )
 
     # This conversation is ambiguous — short Q&A, no tools
@@ -54,6 +55,7 @@ def main():
     print()
     print("Full result:")
     import json
+
     print(json.dumps(result.to_dict(), indent=2))
 
 

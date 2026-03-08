@@ -9,24 +9,19 @@ Orchestrates the 3-layer classification:
 
 from __future__ import annotations
 
-from .types import (
-    ActivityType,
-    OutputType,
-    ConversationMessage,
-    Signal,
-    Segment,
-    ClassificationResult,
-)
-from .signals import extract_signals
-from .rules import apply_rules
 from .benchmark_table import BenchmarkTable
 from .llm_classifier import (
-    LLMResult,
     classify_with_llm_sync,
-    classify_with_llm_anthropic,
-    classify_with_llm_openai,
 )
-
+from .rules import apply_rules
+from .signals import extract_signals
+from .types import (
+    ActivityType,
+    ClassificationResult,
+    ConversationMessage,
+    OutputType,
+    Segment,
+)
 
 # Activity types that count as "productive" for time-saved calculation
 PRODUCTIVE_ACTIVITIES = {
@@ -128,9 +123,7 @@ class ProductivityClassifier:
 
             # Calculate time saved
             if rule_result.activity_type in PRODUCTIVE_ACTIVITIES:
-                low, mid, high = self.benchmarks.get_time_for_output(
-                    rule_result.output_type
-                )
+                low, mid, high = self.benchmarks.get_time_for_output(rule_result.output_type)
                 default_time = self.benchmarks.get_default_time(rule_result.output_type)
                 segment.time_saved_seconds = default_time
                 segment.time_saved_low = low
@@ -144,9 +137,7 @@ class ProductivityClassifier:
 
         elif self.enable_llm_fallback:
             # Layer 3: LLM classification
-            msg_dicts = [
-                {"role": m.role, "content": m.content} for m in messages
-            ]
+            msg_dicts = [{"role": m.role, "content": m.content} for m in messages]
             llm_result = classify_with_llm_sync(
                 msg_dicts, signal, self.api_key, self.provider, self.model
             )
@@ -166,9 +157,7 @@ class ProductivityClassifier:
 
             # Calculate time saved
             if llm_result.activity_type in PRODUCTIVE_ACTIVITIES:
-                low, mid, high = self.benchmarks.get_time_for_output(
-                    llm_result.output_type
-                )
+                low, mid, high = self.benchmarks.get_time_for_output(llm_result.output_type)
                 default_time = self.benchmarks.get_default_time(llm_result.output_type)
                 segment.time_saved_seconds = default_time
                 segment.time_saved_low = low
@@ -219,10 +208,7 @@ class ProductivityClassifier:
         Returns:
             List of ClassificationResult objects.
         """
-        return [
-            self.classify(messages, conv_id)
-            for conv_id, messages in conversations
-        ]
+        return [self.classify(messages, conv_id) for conv_id, messages in conversations]
 
     def aggregate_time_saved(
         self,
@@ -246,18 +232,14 @@ class ProductivityClassifier:
             if r.overall_activity in PRODUCTIVE_ACTIVITIES:
                 productive_count += 1
             activity_key = r.overall_activity.value
-            by_activity[activity_key] = (
-                by_activity.get(activity_key, 0) + r.time_saved_seconds
-            )
+            by_activity[activity_key] = by_activity.get(activity_key, 0) + r.time_saved_seconds
             for output in r.outputs:
                 by_output[output] = by_output.get(output, 0) + r.time_saved_seconds
 
         return {
             "total_conversations": total_count,
             "productive_conversations": productive_count,
-            "productivity_rate": (
-                round(productive_count / total_count, 2) if total_count else 0
-            ),
+            "productivity_rate": (round(productive_count / total_count, 2) if total_count else 0),
             "total_time_saved_seconds": total_seconds,
             "total_time_saved_minutes": round(total_seconds / 60, 1),
             "total_time_saved_hours": round(total_seconds / 3600, 1),
@@ -265,30 +247,18 @@ class ProductivityClassifier:
                 round(total_low / 60, 1),
                 round(total_high / 60, 1),
             ],
-            "by_activity": {
-                k: round(v / 60, 1) for k, v in by_activity.items()
-            },
-            "by_output": {
-                k: round(v / 60, 1) for k, v in by_output.items()
-            },
-            "llm_classifications": sum(
-                1 for r in results if r.classifier_layer == 3
-            ),
-            "total_classification_tokens": sum(
-                r.classification_cost_tokens for r in results
-            ),
+            "by_activity": {k: round(v / 60, 1) for k, v in by_activity.items()},
+            "by_output": {k: round(v / 60, 1) for k, v in by_output.items()},
+            "llm_classifications": sum(1 for r in results if r.classifier_layer == 3),
+            "total_classification_tokens": sum(r.classification_cost_tokens for r in results),
             # Token-based work output
             "total_output_tokens": sum(r.total_output_tokens for r in results),
             "total_input_tokens": sum(r.total_input_tokens for r in results),
-            "total_tokens": sum(
-                r.total_output_tokens + r.total_input_tokens for r in results
-            ),
+            "total_tokens": sum(r.total_output_tokens + r.total_input_tokens for r in results),
             "code_output_tokens": sum(r.code_output_tokens for r in results),
             "prose_output_tokens": sum(r.prose_output_tokens for r in results),
             "avg_output_tokens_per_conversation": (
-                round(
-                    sum(r.total_output_tokens for r in results) / total_count
-                )
+                round(sum(r.total_output_tokens for r in results) / total_count)
                 if total_count
                 else 0
             ),

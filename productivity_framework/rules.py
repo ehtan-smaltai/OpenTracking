@@ -8,6 +8,7 @@ Handles ~70% of conversations with zero API cost.
 from __future__ import annotations
 
 from dataclasses import dataclass
+
 from .types import ActivityType, OutputType, Signal
 
 
@@ -125,10 +126,7 @@ def _rule_code_generation(signal: Signal) -> RuleResult:
 def _rule_research_heavy(signal: Signal) -> RuleResult:
     """Rule 5: Domain-heavy research conversation."""
     total_domain_hits = sum(signal.domain_keywords.values())
-    if (
-        total_domain_hits >= 3
-        and signal.assistant_total_words > 800
-    ):
+    if total_domain_hits >= 3 and signal.assistant_total_words > 800:
         return RuleResult(
             matched=True,
             activity_type=ActivityType.WORK_RESEARCH,
@@ -195,14 +193,14 @@ def _rule_learning_pattern(signal: Signal) -> RuleResult:
 
 # Rules in priority order — first high-confidence match wins
 RULES = [
-    _rule_external_action,       # Highest signal
+    _rule_external_action,  # Highest signal
     _rule_artifact_created,
     _rule_code_generation,
     _rule_substantial_structured_output,
     _rule_research_heavy,
     _rule_extended_no_output,
     _rule_learning_pattern,
-    _rule_quick_qa,              # Fallback / ambiguous
+    _rule_quick_qa,  # Fallback / ambiguous
 ]
 
 

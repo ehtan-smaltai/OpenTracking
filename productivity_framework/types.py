@@ -11,12 +11,12 @@ from typing import Any
 class ActivityType(str, enum.Enum):
     """What kind of activity was this conversation segment?"""
 
-    WORK_CREATION = "work_creation"      # Produced a deliverable
-    WORK_RESEARCH = "work_research"      # Research/analysis for work
-    WORK_SUPPORT = "work_support"        # Helped with a work process
-    LEARNING = "learning"                # Educational, skill-building
+    WORK_CREATION = "work_creation"  # Produced a deliverable
+    WORK_RESEARCH = "work_research"  # Research/analysis for work
+    WORK_SUPPORT = "work_support"  # Helped with a work process
+    LEARNING = "learning"  # Educational, skill-building
     PERSONAL_PRODUCTIVE = "personal_productive"  # Personal but useful
-    CASUAL = "casual"                    # Social, entertainment, testing
+    CASUAL = "casual"  # Social, entertainment, testing
 
 
 class OutputType(str, enum.Enum):

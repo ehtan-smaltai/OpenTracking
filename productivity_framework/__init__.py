@@ -10,17 +10,17 @@ by classifying conversations and estimating time saved.
   Layer 3 (LLM)      - Classify ambiguous cases via LLM (user's API key)
 """
 
+from .benchmark_table import BenchmarkTable
+from .classifier import ProductivityClassifier
+from .tracker import Tracker
 from .types import (
     ActivityType,
-    OutputType,
-    ConversationMessage,
-    Signal,
-    Segment,
     ClassificationResult,
+    ConversationMessage,
+    OutputType,
+    Segment,
+    Signal,
 )
-from .classifier import ProductivityClassifier
-from .benchmark_table import BenchmarkTable
-from .tracker import Tracker
 
 __version__ = "0.1.0"
 

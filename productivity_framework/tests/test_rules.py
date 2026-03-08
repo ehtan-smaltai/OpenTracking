@@ -1,8 +1,7 @@
 """Tests for Layer 2: Rule Engine."""
 
-import pytest
-from productivity_framework.types import ActivityType, OutputType, Signal
 from productivity_framework.rules import apply_rules
+from productivity_framework.types import ActivityType, OutputType, Signal
 
 
 class TestRuleEngine:
