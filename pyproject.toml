@@ -36,6 +36,14 @@ dev = [
     "pytest-asyncio>=0.21.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/ehtan-smaltai/ai-productivity-framework"
+Repository = "https://github.com/ehtan-smaltai/ai-productivity-framework"
+Issues = "https://github.com/ehtan-smaltai/ai-productivity-framework/issues"
+
+[project.scripts]
+productivity-classify = "productivity_framework.cli:main"
+
 [tool.setuptools.packages.find]
 include = ["productivity_framework*"]
 
