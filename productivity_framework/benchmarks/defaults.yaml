@@ -1,0 +1,175 @@
+# AI Productivity Framework - Default Time Benchmarks
+#
+# Each entry represents how long a task would take a human WITHOUT AI.
+# Times are in seconds. Three estimates: low, mid, high.
+#
+# These are community-maintainable defaults. Override per-org or per-user.
+# Sources: workplace productivity studies, time-tracking aggregates.
+
+tasks:
+  # --- Content Creation ---
+  email_draft:
+    low: 180       # 3 min - quick reply
+    mid: 420       # 7 min - standard business email
+    high: 900      # 15 min - detailed/sensitive email
+    description: "Drafting an email from scratch"
+
+  document_creation:
+    low: 900       # 15 min - short doc
+    mid: 1800      # 30 min - standard document
+    high: 3600     # 60 min - detailed report
+    description: "Creating a document (memo, report, proposal)"
+
+  presentation_creation:
+    low: 1200      # 20 min - simple deck
+    mid: 2700      # 45 min - standard presentation
+    high: 5400     # 90 min - detailed pitch deck
+    description: "Building a presentation/slide deck"
+
+  social_media_post:
+    low: 300       # 5 min - quick post
+    mid: 600       # 10 min - crafted post
+    high: 1200     # 20 min - post with research
+    description: "Writing a social media post"
+
+  # --- Analysis & Research ---
+  research_summary:
+    low: 600       # 10 min - quick lookup
+    mid: 1500      # 25 min - moderate research
+    high: 2700     # 45 min - deep research
+    description: "Researching a topic and summarizing findings"
+
+  data_analysis:
+    low: 600       # 10 min - simple query
+    mid: 1200      # 20 min - moderate analysis
+    high: 2400     # 40 min - complex analysis
+    description: "Analyzing data, trends, or metrics"
+
+  competitive_analysis:
+    low: 1200      # 20 min
+    mid: 2400      # 40 min
+    high: 5400     # 90 min
+    description: "Competitive or market analysis"
+
+  # --- Code & Technical ---
+  code_snippet:
+    low: 300       # 5 min - simple function
+    mid: 900       # 15 min - moderate code
+    high: 1800     # 30 min - complex implementation
+    description: "Writing a code snippet or function"
+
+  code_review:
+    low: 300       # 5 min
+    mid: 900       # 15 min
+    high: 1800     # 30 min
+    description: "Reviewing and suggesting code improvements"
+
+  code_debugging:
+    low: 600       # 10 min
+    mid: 1800      # 30 min
+    high: 3600     # 60 min
+    description: "Finding and fixing a bug"
+
+  # --- Spreadsheets ---
+  spreadsheet_creation:
+    low: 300       # 5 min - simple sheet
+    mid: 900       # 15 min - formatted sheet
+    high: 1800     # 30 min - complex formulas
+    description: "Creating or updating a spreadsheet"
+
+  spreadsheet_analysis:
+    low: 600       # 10 min
+    mid: 1200      # 20 min
+    high: 2400     # 40 min
+    description: "Analyzing spreadsheet data"
+
+  # --- Work Support ---
+  meeting_prep:
+    low: 300       # 5 min
+    mid: 600       # 10 min
+    high: 1200     # 20 min
+    description: "Preparing for a meeting (agenda, notes, research)"
+
+  scheduling:
+    low: 120       # 2 min
+    mid: 300       # 5 min
+    high: 600      # 10 min
+    description: "Scheduling a meeting or event"
+
+  task_planning:
+    low: 300       # 5 min
+    mid: 900       # 15 min
+    high: 1800     # 30 min
+    description: "Planning tasks, creating action items"
+
+  # --- Communication ---
+  message_drafting:
+    low: 60        # 1 min
+    mid: 180       # 3 min
+    high: 300      # 5 min
+    description: "Drafting a chat/Slack message"
+
+  # --- Quick Tasks ---
+  quick_answer:
+    low: 60        # 1 min
+    mid: 180       # 3 min
+    high: 300      # 5 min
+    description: "Quick factual lookup or Q&A"
+
+  translation:
+    low: 180       # 3 min
+    mid: 600       # 10 min
+    high: 1200     # 20 min
+    description: "Translating text between languages"
+
+  summarization:
+    low: 300       # 5 min
+    mid: 600       # 10 min
+    high: 1200     # 20 min
+    description: "Summarizing a long document or article"
+
+  # --- Actions ---
+  action_executed:
+    low: 60        # 1 min - click and send
+    mid: 180       # 3 min - fill form and submit
+    high: 300      # 5 min - multi-step action
+    description: "Executing an action (sending, posting, updating)"
+
+# Map from tool name patterns to task types
+tool_mappings:
+  email: email_draft
+  gmail: email_draft
+  send_email: email_draft
+  outlook: email_draft
+
+  google_sheets: spreadsheet_creation
+  excel: spreadsheet_creation
+  spreadsheet: spreadsheet_creation
+
+  google_docs: document_creation
+  create_doc: document_creation
+  word: document_creation
+
+  google_slides: presentation_creation
+  powerpoint: presentation_creation
+  presentation: presentation_creation
+
+  calendar: scheduling
+  schedule: scheduling
+
+  slack: message_drafting
+  telegram: message_drafting
+  teams: message_drafting
+
+  web_search: research_summary
+  search: research_summary
+  firecrawl: research_summary
+  scrape: research_summary
+
+  code: code_snippet
+  github: code_snippet
+  git: code_snippet
+
+# Default time estimate mode
+# Options: low, mid, high
+default_estimate: low
