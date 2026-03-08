@@ -88,6 +88,72 @@ productivity-classify conversation.json
 
 # Classify a whole week's conversations
 productivity-classify my_conversations/ --output weekly_report.json
+
+# Classify AND save to your personal history
+productivity-classify conversation.json --track
+
+# View your productivity summary
+productivity-summary                    # This week (default)
+productivity-summary --period today     # Just today
+productivity-summary --period month     # This month
+productivity-summary --period all       # All time
+productivity-summary --compare          # This week vs last week
+```
+
+## Track Your Productivity Over Time
+
+Add `--track` to any classify command to save results to `~/.ai-productivity/history.jsonl`. Then use `productivity-summary` to see your trends:
+
+```bash
+$ productivity-summary
+
+  This week
+  2026-03-03 to 2026-03-08
+
+  23 conversations
+  18 productive (78%)
+  4.2h saved (252 min)
+
+  By activity:
+    work_creation: 126 min
+    work_support: 78 min
+    work_research: 48 min
+
+  By output:
+    code: 126 min
+    email: 48 min
+    document: 30 min
+```
+
+Compare weeks:
+
+```bash
+$ productivity-summary --compare
+
+  This week vs Last week
+
+  Conversations              23     was 19 (+4)
+  Productive                 18     was 14 (+4)
+  Time saved                 252 min   was 198 min (+54 min)
+  Productivity rate          78%    was 74%
+```
+
+Or use the tracker programmatically:
+
+```python
+from productivity_framework import Tracker, ProductivityClassifier
+
+classifier = ProductivityClassifier()
+tracker = Tracker()  # stores in ~/.ai-productivity/
+
+# Classify and track
+result = classifier.classify(messages)
+tracker.log(result)
+
+# Get your weekly summary
+summary = tracker.summary(period="week")
+print(f"This week: {summary['total_time_saved_hours']}h saved")
+print(f"Productive: {summary['productivity_rate']:.0%}")
 ```
 
 ## How It Works

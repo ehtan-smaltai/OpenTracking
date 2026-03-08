@@ -1,10 +1,12 @@
 """
-Command-line interface for the AI Productivity Measurement Framework.
+Command-line interface for the AI Productivity Tracker.
 
 Usage:
     productivity-classify conversation.json
-    productivity-classify conversations/ --output report.json
-    productivity-classify conversation.json --api-key sk-... --provider anthropic
+    productivity-classify conversation.json --track
+    productivity-summary
+    productivity-summary --period month
+    productivity-summary --compare
 """
 
 from __future__ import annotations
@@ -16,6 +18,7 @@ from pathlib import Path
 
 from .classifier import ProductivityClassifier
 from .benchmark_table import BenchmarkTable
+from .tracker import Tracker
 from .types import ConversationMessage
 
 
@@ -90,6 +93,15 @@ def main(argv: list[str] | None = None) -> int:
         dest="json_output",
         help="Output raw JSON (default for file output)",
     )
+    parser.add_argument(
+        "--track",
+        action="store_true",
+        help="Save results to history (~/.ai-productivity/history.jsonl)",
+    )
+    parser.add_argument(
+        "--history-dir",
+        help="Custom directory for history storage (default: ~/.ai-productivity)",
+    )
 
     args = parser.parse_args(argv)
     input_path = Path(args.input)
@@ -123,6 +135,12 @@ def main(argv: list[str] | None = None) -> int:
 
     # Classify
     results = classifier.classify_batch(conversations)
+
+    # Track if requested
+    if args.track:
+        tracker = Tracker(history_dir=args.history_dir)
+        tracker.log_batch(results)
+        print(f"Logged {len(results)} result(s) to {tracker.history_path}")
 
     # Format output
     if len(results) == 1 and not args.output:
@@ -177,6 +195,123 @@ def main(argv: list[str] | None = None) -> int:
                         print(f"  {output_type}: {minutes} min")
 
     return 0
+
+
+def summary_main(argv: list[str] | None = None) -> int:
+    """CLI entry point for productivity-summary."""
+    parser = argparse.ArgumentParser(
+        prog="productivity-summary",
+        description="View your AI productivity history and trends.",
+    )
+    parser.add_argument(
+        "--period",
+        choices=["today", "week", "month", "all"],
+        default="week",
+        help="Time period to summarize (default: week)",
+    )
+    parser.add_argument(
+        "--compare",
+        action="store_true",
+        help="Compare this week vs last week",
+    )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        dest="json_output",
+        help="Output raw JSON",
+    )
+    parser.add_argument(
+        "--history-dir",
+        help="Custom directory for history storage (default: ~/.ai-productivity)",
+    )
+
+    args = parser.parse_args(argv)
+    tracker = Tracker(history_dir=args.history_dir)
+
+    if not tracker.history_path.exists():
+        print("No history found. Use 'productivity-classify --track' to start tracking.")
+        print(f"History location: {tracker.history_path}")
+        return 0
+
+    if args.compare:
+        data = tracker.compare()
+        if args.json_output:
+            print(json.dumps(data, indent=2))
+        else:
+            _print_comparison(data)
+        return 0
+
+    data = tracker.summary(period=args.period)
+
+    if args.json_output:
+        print(json.dumps(data, indent=2))
+    else:
+        _print_summary(data)
+
+    return 0
+
+
+def _print_summary(s: dict) -> None:
+    """Print a human-readable summary."""
+    period_label = {
+        "today": "Today",
+        "week": "This week",
+        "this_week": "This week",
+        "month": "This month",
+        "all": "All time",
+        "last_week": "Last week",
+    }.get(s["period"], s["period"])
+
+    print(f"  {period_label}")
+    if s["date_range"]:
+        print(f"  {s['date_range'][0]} to {s['date_range'][1]}")
+    print()
+
+    if s["total_conversations"] == 0:
+        print("  No conversations tracked for this period.")
+        return
+
+    rate = s["productivity_rate"]
+    print(f"  {s['total_conversations']} conversations")
+    print(f"  {s['productive_conversations']} productive ({rate:.0%})")
+    print(f"  {s['total_time_saved_hours']}h saved ({s['total_time_saved_minutes']} min)")
+
+    if s["by_activity"]:
+        print()
+        print("  By activity:")
+        for act, mins in sorted(s["by_activity"].items(), key=lambda x: -x[1]):
+            if mins > 0:
+                print(f"    {act}: {mins} min")
+
+    if s["by_output"]:
+        print()
+        print("  By output:")
+        for out, mins in sorted(s["by_output"].items(), key=lambda x: -x[1]):
+            if mins > 0:
+                print(f"    {out}: {mins} min")
+
+
+def _print_comparison(data: dict) -> None:
+    """Print this week vs last week comparison."""
+    this_w = data["this_week"]
+    last_w = data["last_week"]
+
+    print("  This week vs Last week")
+    print()
+
+    def _row(label: str, this_val, last_val, suffix: str = "") -> None:
+        diff = this_val - last_val if isinstance(this_val, (int, float)) else 0
+        arrow = "+" if diff > 0 else ""
+        diff_str = f" ({arrow}{diff}{suffix})" if last_val else ""
+        print(f"  {label:24s} {this_val}{suffix:4s}   was {last_val}{suffix}{diff_str}")
+
+    _row("Conversations", this_w["total_conversations"], last_w["total_conversations"])
+    _row("Productive", this_w["productive_conversations"], last_w["productive_conversations"])
+    _row("Time saved", this_w["total_time_saved_minutes"], last_w["total_time_saved_minutes"], " min")
+
+    this_rate = f"{this_w['productivity_rate']:.0%}"
+    last_rate = f"{last_w['productivity_rate']:.0%}"
+    print(f"  {'Productivity rate':24s} {this_rate:4s}   was {last_rate}")
 
 
 if __name__ == "__main__":

@@ -43,6 +43,7 @@ Issues = "https://github.com/ehtan-smaltai/OpenTracking/issues"
 
 [project.scripts]
 productivity-classify = "productivity_framework.cli:main"
+productivity-summary = "productivity_framework.cli:summary_main"
 
 [tool.setuptools.packages.find]
 include = ["productivity_framework*"]

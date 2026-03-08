@@ -20,12 +20,14 @@ from .types import (
 )
 from .classifier import ProductivityClassifier
 from .benchmark_table import BenchmarkTable
+from .tracker import Tracker
 
 __version__ = "0.1.0"
 
 __all__ = [
     "ProductivityClassifier",
     "BenchmarkTable",
+    "Tracker",
     "ActivityType",
     "OutputType",
     "ConversationMessage",
