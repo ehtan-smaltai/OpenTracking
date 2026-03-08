@@ -2,13 +2,11 @@
 
 ## Why This Framework Exists
 
-AI tools are everywhere. ChatGPT, Claude, Copilot, Gemini — millions of people use them daily for work. Companies pay $20-30/month per seat. Individuals pay out of pocket.
+Millions of people use AI assistants daily — for coding, writing, research, and everyday tasks. But nobody can answer the simple question: **"How much time does AI actually save me?"**
 
-But nobody can answer the simple question: **"How much time does AI actually save me?"**
-
-- You *feel* more productive, but feelings don't show up in performance reviews
-- Your company invested $50K in AI licenses, but can't quantify the return
-- You want to optimize your workflow, but don't know where AI helps most vs. where you're wasting time chatting
+- You *feel* more productive, but you can't put a number on it
+- You want to optimize your workflow, but don't know where AI helps most vs. where you're just chatting
+- You're curious whether your AI subscription is worth the monthly cost
 
 This framework exists to turn **"AI probably helps me"** into **"AI saved me 4.2 hours this week — 2.1h on code, 1.3h on emails, 0.8h on research."**
 

@@ -6,14 +6,14 @@ You use ChatGPT, Claude, Copilot, or other AI assistants every day. But how much
 
 ## The Problem
 
-AI tools promise massive productivity gains, but nobody tracks them:
+You use AI every day, but you have no idea how much it actually helps:
 
 - **You feel faster** — but you can't put a number on it
-- **Your manager asks** — "What's the ROI on that AI subscription?" and you shrug
-- **Performance reviews** — you want to show you've become more productive, but it's all anecdotal
-- **Companies spend thousands** on AI licenses — with zero data on whether it's working
+- **You pay $20/month** for ChatGPT or Claude — is it worth it?
+- **You want to improve** — but you don't know which tasks benefit most from AI
+- **You're curious** — how much of your AI time is productive vs. just chatting?
 
-Time saved by AI is invisible unless you measure it. This framework makes it visible.
+You can't improve what you don't measure. This framework makes your AI productivity visible.
 
 ## What This Does
 
@@ -378,12 +378,12 @@ productivity_framework/
 
 ## Why This Exists
 
-AI tools are becoming essential for knowledge work. But "I feel more productive" isn't enough — you need data:
+AI assistants are part of daily life for millions of developers and knowledge workers. But "I feel more productive" is just a feeling — this tool gives you actual data:
 
-- **For yourself** — understand your AI usage patterns, optimize your workflow, see where AI helps most
-- **For your career** — show concrete productivity improvements in reviews and promotions
-- **For your team** — make informed decisions about which AI tools to keep paying for
-- **For the industry** — contribute anonymized benchmarks so everyone can improve
+- **Understand your patterns** — see where AI helps you most and where you're just chatting
+- **Optimize your workflow** — focus AI usage on tasks where it saves the most time
+- **Track your growth** — watch your productivity improve week over week
+- **Satisfy your curiosity** — how much of your AI usage is genuinely productive?
 
 The goal is simple: **turn "AI probably helps me" into "AI saved me 4.2 hours this week, mostly on code and emails."**
 
