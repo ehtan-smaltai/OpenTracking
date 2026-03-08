@@ -1,6 +1,23 @@
 # Architecture
 
-The framework uses a 3-layer pipeline that prioritizes speed and cost. Most conversations are classified for free by the rule engine. Only ambiguous cases are escalated to an LLM.
+## Why This Framework Exists
+
+AI tools are everywhere. ChatGPT, Claude, Copilot, Gemini — millions of people use them daily for work. Companies pay $20-30/month per seat. Individuals pay out of pocket.
+
+But nobody can answer the simple question: **"How much time does AI actually save me?"**
+
+- You *feel* more productive, but feelings don't show up in performance reviews
+- Your company invested $50K in AI licenses, but can't quantify the return
+- You want to optimize your workflow, but don't know where AI helps most vs. where you're wasting time chatting
+
+This framework exists to turn **"AI probably helps me"** into **"AI saved me 4.2 hours this week — 2.1h on code, 1.3h on emails, 0.8h on research."**
+
+### Design Principles
+
+1. **Free by default** — the rule engine handles most cases with zero cost
+2. **Private by default** — nothing leaves your machine unless you opt into LLM fallback
+3. **Conservative estimates** — we'd rather undercount than overcount time saved
+4. **Customizable** — your workflow is unique, so benchmarks are overridable
 
 ## Pipeline Overview
 
@@ -15,192 +32,156 @@ The framework uses a 3-layer pipeline that prioritizes speed and cost. Most conv
 └─────────────────┘     └──────────────────┘     └─────────────────┘
        ▲                                                │
        │                                                │
-  Conversation                                  ClassificationResult
-  Messages                                      (activity, time saved,
-                                                 outputs, tokens)
+  Your AI                                       ClassificationResult
+  conversations                                 (what you did, time saved,
+                                                 what was produced)
 ```
 
 ## Layer 1: Signal Extraction
 
 **File:** `signals.py`
 
-Extracts structured features from raw conversation messages. This is pure computation — no API calls, no cost.
+Scans your conversation and extracts structured features. Pure computation — no API calls, no cost, no data leaves your machine.
 
-### Signals extracted
+### What gets extracted
 
-| Signal | Description |
-|--------|-------------|
-| `tool_calls` | List of tools invoked (send_email, create_doc, etc.) |
-| `tool_call_count` | Total number of tool calls |
-| `external_actions` | Tools that affect the outside world (send, post, deploy) |
-| `artifacts_produced` | Tools that create files (create_doc, write_file) |
-| `message_count` | Total messages in conversation |
-| `user_message_avg_words` | Average words per user message |
-| `assistant_total_words` | Total words in all assistant messages |
-| `has_code_blocks` | Whether assistant output contained ``` code blocks |
-| `has_tables` | Whether assistant output contained markdown tables |
-| `has_lists` | Whether assistant output contained bullet/numbered lists |
-| `has_structured_output` | Any of: code blocks, tables, or lists |
-| `domain_keywords` | Keyword hits by domain (finance, engineering, etc.) |
-| `user_refinement_count` | How many times the user asked for changes |
-| `total_input_tokens` | Total user tokens (estimated or explicit) |
-| `total_output_tokens` | Total assistant tokens |
-| `code_output_tokens` | Tokens inside code blocks |
-| `prose_output_tokens` | Tokens outside code blocks |
+| Signal | What it tells us |
+|--------|-----------------|
+| `tool_calls` | Did the AI use tools? (send_email, create_doc, deploy, etc.) |
+| `external_actions` | Did the AI affect the outside world? (sent something, posted, deployed) |
+| `artifacts_produced` | Did the AI create files? (wrote a doc, saved code) |
+| `message_count` | How long was the conversation? |
+| `assistant_total_words` | How much did the AI output? |
+| `has_code_blocks` | Did the AI write code? |
+| `has_structured_output` | Did the AI produce structured content? (code, tables, lists) |
+| `domain_keywords` | What domain is this about? (engineering, finance, marketing, etc.) |
+| `user_refinement_count` | Did you iterate? ("make it shorter", "add error handling") |
+| `code_output_tokens` | How much code was written? |
+| `prose_output_tokens` | How much prose was written? |
 
-### Token estimation
+### Domain detection
 
-Tokens are estimated at ~4 characters per token when `token_count` isn't provided on `ConversationMessage`. For exact counts, set `token_count` on each message.
-
-### Domain keyword detection
-
-The signal extractor scans for keywords across 7 domains:
-- **Finance:** revenue, profit, EBITDA, forecast, ROI, etc.
-- **Marketing:** campaign, conversion, funnel, CTR, etc.
-- **Engineering:** API, deploy, bug, sprint, CI/CD, etc.
-- **Legal:** contract, compliance, NDA, patent, etc.
-- **HR:** hiring, onboarding, performance review, etc.
-- **Sales:** pipeline, quota, CRM, proposal, etc.
-- **Operations:** process, workflow, supply chain, etc.
+Keywords are scanned across 7 domains:
+- **Engineering:** API, deploy, bug, sprint, CI/CD, refactor
+- **Finance:** revenue, profit, EBITDA, forecast, ROI
+- **Marketing:** campaign, conversion, funnel, CTR, SEO
+- **Legal:** contract, compliance, NDA, patent, liability
+- **HR:** hiring, onboarding, performance review, PIP
+- **Sales:** pipeline, quota, CRM, proposal, close rate
+- **Operations:** process, workflow, supply chain, SLA
 
 ## Layer 2: Rule Engine
 
 **File:** `rules.py`
 
-8 deterministic rules that classify clear-cut cases. Rules are evaluated in priority order — the first confident match wins.
+8 deterministic rules that classify obvious cases. Rules run in priority order — first confident match wins.
 
-### Rules (in priority order)
+| # | Rule | What it catches | Classification | Confidence |
+|---|------|----------------|----------------|------------|
+| 1 | `external_action` | AI sent an email, posted, deployed | `work_support` | 95% |
+| 2 | `artifact_created` | AI created a document, wrote a file | `work_creation` | 90% |
+| 3 | `code_generation` | AI wrote substantial code | `work_creation` | 85% |
+| 4 | `substantial_structured_output` | AI produced a long, structured document with iterations | `work_creation` | 82% |
+| 5 | `research_heavy` | Deep domain research with long output | `work_research` | 75% |
+| 6 | `extended_no_output` | Long chat, no tools, no structure | `casual` | 80% |
+| 7 | `learning_pattern` | Long explanation, domain keywords, no iteration | `learning` | 70% |
+| 8 | `quick_qa_ambiguous` | Short exchange, unclear purpose | *pass to LLM* | 50% |
 
-| # | Rule | Condition | Activity | Confidence |
-|---|------|-----------|----------|------------|
-| 1 | `external_action` | Tool call matches send/post/deploy pattern | `work_support` | 0.95 |
-| 2 | `artifact_created` | Tool call matches create/write pattern | `work_creation` | 0.90 |
-| 3 | `code_generation` | Code blocks + long output + engineering keywords | `work_creation` | 0.85 |
-| 4 | `substantial_structured_output` | Structured output + 500+ words + user refinement | `work_creation` | 0.82 |
-| 5 | `research_heavy` | 3+ domain keyword hits + 800+ assistant words | `work_research` | 0.75 |
-| 6 | `extended_no_output` | 6+ messages, no tools, no structure, no domain | `casual` | 0.80 |
-| 7 | `learning_pattern` | Long structured output, no tools, domain keywords, no refinement | `learning` | 0.70 |
-| 8 | `quick_qa_ambiguous` | 4 or fewer messages, no tools, short output | *(pass to LLM)* | 0.50 |
-
-### Confidence threshold
-
-Rules must meet the `min_rule_confidence` threshold (default 0.70) to be accepted. Below that, the conversation is passed to Layer 3.
+Rules must hit a confidence threshold (default 70%) to be accepted. Below that → Layer 3.
 
 ## Layer 3: LLM Classifier
 
 **File:** `llm_classifier.py`
 
-Handles ambiguous cases that the rule engine can't classify confidently. Uses the cheapest model available (Haiku for Anthropic, GPT-4o-mini for OpenAI).
+For the ~30% of conversations that rules can't classify confidently. Uses the cheapest available model (Haiku for Anthropic, GPT-4o-mini for OpenAI).
 
-### When does the LLM get called?
+**When does it run?**
+1. No rule matched with enough confidence
+2. You provided an API key
+3. LLM fallback is enabled (default: yes)
 
-Only when:
-1. No rule matched with confidence >= `min_rule_confidence`
-2. `api_key` was provided
-3. `enable_llm_fallback` is `True`
+**What does it send?** A summary of the conversation + extracted signals + instructions to classify. Typical cost: ~$0.001 per conversation.
 
-### What does it send to the LLM?
-
-A structured prompt with:
-- The conversation messages (truncated to key portions)
-- The extracted signals from Layer 1
-- Instructions to classify into ActivityType and OutputType
-- Instructions to assess confidence
-
-### Cost
-
-Typical cost per classification: ~$0.001 (using cheapest models). Token usage is tracked in `result.classification_cost_tokens`.
+**You can skip it entirely.** Without an API key, ambiguous conversations default to `casual` with low confidence. You still get accurate results for the ~70% that rules handle.
 
 ## Time Estimation
 
 **File:** `benchmark_table.py`
 
-After classification, the framework estimates how long the task would have taken a human without AI assistance.
+After classifying *what* you did, the framework estimates *how long it would have taken without AI*.
 
 ### How it works
 
-1. The `OutputType` (email, document, code, etc.) maps to a benchmark entry
-2. The benchmark provides three estimates: `low`, `mid`, `high` (in seconds)
-3. The `estimate_mode` setting determines which estimate to use as the default
-4. All three estimates are always available on the result
+1. The output type (email, code, document, etc.) maps to a benchmark
+2. Each benchmark has three estimates: `low`, `mid`, `high` (in seconds)
+3. Your `estimate_mode` setting picks which to use (default: `low` = conservative)
 
-### Default benchmarks
+### Default benchmarks (conservative)
 
-Loaded from `benchmarks/defaults.yaml`. Example:
+| Output | Low | Mid | High |
+|--------|-----|-----|------|
+| Email draft | 3 min | 7 min | 15 min |
+| Code function | 15 min | 30 min | 60 min |
+| Document | 10 min | 20 min | 30 min |
+| Research/analysis | 15 min | 30 min | 45 min |
+| Quick answer | 2 min | 5 min | 10 min |
+
+### Customizing
 
 ```yaml
-email_draft:
-  low: 180       # 3 min - quick reply
-  mid: 420       # 7 min - standard business email
-  high: 900      # 15 min - detailed/sensitive email
+# my_benchmarks.yaml - adjust for your speed
+tasks:
+  email_draft:
+    low: 120    # I write fast — 2 min
+    mid: 300    # 5 min
+    high: 600   # 10 min
 ```
 
-### Overriding benchmarks
-
 ```python
-# Via code
-table = BenchmarkTable(overrides={
-    "email_draft": {"low": 300, "mid": 600, "high": 1200},
-})
-
-# Via custom YAML
-table = BenchmarkTable(defaults_path="my_company_benchmarks.yaml")
+table = BenchmarkTable(defaults_path="my_benchmarks.yaml")
+classifier = ProductivityClassifier(benchmark_table=table)
 ```
 
 ## Data Flow
 
 ```
-ConversationMessage[]
+Your AI conversations
         │
         ▼
-  extract_signals()  ──▶  Signal
+  extract_signals()  ──▶  What happened in this conversation?
         │
         ▼
-    apply_rules()    ──▶  RuleResult
+    apply_rules()    ──▶  Can we classify this deterministically?
         │
-        ├── matched (confidence >= threshold)
+        ├── YES (confident match)
         │       │
         │       ▼
-        │   Build Segment with activity + output type
-        │       │
-        │       ▼
-        │   Look up time benchmark
-        │       │
-        │       ▼
-        │   ClassificationResult ✓
+        │   Look up time benchmark → ClassificationResult
         │
-        └── not matched
+        └── NO (ambiguous)
                 │
                 ▼
-          classify_with_llm()  ──▶  LLMResult
-                │
-                ▼
-            Build Segment
-                │
-                ▼
-            Look up time benchmark
-                │
-                ▼
-            ClassificationResult ✓
+          LLM classifies it → Look up benchmark → ClassificationResult
 ```
 
 ## Design Decisions
 
-### Why 3 layers?
+### Why not just use an LLM for everything?
 
-- **Layer 1** is always needed — signals are the foundation for both rules and LLM prompts.
-- **Layer 2** handles the easy cases (tool call = work done) at zero cost.
-- **Layer 3** handles nuanced cases where context matters. Separating it keeps the framework usable without any API key.
+| Concern | Rule engine | LLM-only |
+|---------|------------|----------|
+| **Cost** | Free | ~$0.001/conversation, adds up |
+| **Speed** | Instant | 1-2 seconds per call |
+| **Privacy** | Nothing leaves your machine | Conversations sent to API |
+| **Reliability** | Deterministic, testable | May vary between calls |
+| **Offline** | Works anywhere | Needs internet |
 
 ### Why YAML benchmarks?
 
-- Easy for non-developers to review and suggest changes
+- Easy to review and adjust without coding
 - Version-controllable alongside the code
-- Overridable per organization without forking
+- Different people/teams can have different benchmarks without forking
 
-### Why not use the LLM for everything?
+### Why conservative estimates by default?
 
-- Cost: even at $0.001/call, it adds up at scale
-- Speed: rule engine is instant, LLM adds 1-2s latency
-- Reliability: rules are deterministic and testable
-- Privacy: some users don't want conversation data sent to an LLM
+It's better to say "AI saved you 3 hours this week" and be right than "AI saved you 8 hours" and be wrong. Credibility matters — especially if you're reporting these numbers to someone else.

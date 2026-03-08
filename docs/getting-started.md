@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide walks you through installing, configuring, and using the AI Productivity Measurement Framework in your application.
+This guide walks you through installing and using the AI Productivity Tracker to measure how much time AI saves you.
 
 ## Installation
 
@@ -10,7 +10,7 @@ This guide walks you through installing, configuring, and using the AI Productiv
 pip install ai-productivity-framework
 ```
 
-### With LLM support
+### With LLM support (optional, for better accuracy)
 
 ```bash
 # Anthropic (Claude)
@@ -26,115 +26,126 @@ pip install "ai-productivity-framework[all]"
 ### From source
 
 ```bash
-git clone https://github.com/ehtan-smaltai/ai-productivity-framework.git
-cd ai-productivity-framework
+git clone https://github.com/ehtan-smaltai/OpenTracking.git
+cd OpenTracking
 pip install -e ".[dev]"
 ```
 
 ## Your First Classification
 
-The simplest way to classify a conversation:
+The simplest way to measure a conversation:
 
 ```python
 from productivity_framework import classify
 
 result = classify([
-    {"role": "user", "content": "Draft an email to the marketing team about Q3 results"},
-    {"role": "assistant", "content": "Subject: Q3 Campaign Performance Summary\n\nHi team,\n\nI wanted to share..."},
+    {"role": "user", "content": "Write me a Python script to rename all files in a folder by date"},
+    {"role": "assistant", "content": "Here's a script...\n```python\nimport os\nfrom pathlib import Path\n...```"},
 ])
 
 print(result.overall_activity)     # ActivityType.WORK_CREATION
-print(result.time_saved_display)   # "~5 min (5-10 min range)"
-print(result.confidence)           # 0.82
+print(result.time_saved_display)   # "~15 min (15-30 min range)"
+print(result.confidence)           # 0.85
 ```
 
-That's it. No API key, no config, no cost. The rule engine handled it.
+That's it. No API key needed, no config, no cost. The rule engine handled it.
 
 ## Understanding the Result
 
-Every classification returns a `ClassificationResult` with these key fields:
+Every classification tells you:
 
 ```python
-result.overall_activity       # What kind of work was this? (ActivityType enum)
-result.confidence             # How sure are we? (0.0 to 1.0)
-result.classifier_layer       # Which layer classified it? (2 = rules, 3 = LLM)
-result.time_saved_seconds     # Estimated seconds saved
-result.time_saved_display     # Human-readable: "~7 min (3-15 min range)"
-result.outputs                # What was produced: ["email", "document"]
-result.actions_performed      # External actions: ["send_email"]
-result.total_output_tokens    # AI output volume
-result.to_dict()              # JSON-serializable for storage/APIs
+result.overall_activity       # What did you do? (work_creation, learning, casual, etc.)
+result.confidence             # How confident is the classification? (0.0 to 1.0)
+result.time_saved_seconds     # Estimated seconds saved by using AI
+result.time_saved_display     # Human-readable: "~15 min (15-30 min range)"
+result.outputs                # What was produced: ["code"], ["email"], etc.
+result.actions_performed      # External actions taken: ["send_email"], ["deploy"]
+result.classifier_layer       # Which layer decided? (2 = rules, 3 = LLM)
+result.to_dict()              # JSON-serializable for logging/dashboards
 ```
 
-## Rules-Only vs LLM Mode
+## Practical Scenarios
 
-### Rules-only (default, free)
+### Scenario 1: Track your daily AI usage
+
+Save each conversation as a JSON file, then classify at the end of the day:
+
+```bash
+productivity-classify ~/ai-conversations/today/ --output daily-report.json
+```
+
+### Scenario 2: Weekly productivity summary
 
 ```python
 from productivity_framework import ProductivityClassifier
 
 classifier = ProductivityClassifier()
-```
 
-The rule engine handles ~70% of conversations with zero cost:
-- Email sent → `work_support` (95% confidence)
-- Document created → `work_creation` (90% confidence)
-- Code with engineering keywords → `work_creation` (85% confidence)
-- Long chat, no tools, no structure → `casual` (80% confidence)
-
-For the other ~30% (ambiguous conversations), it defaults to `casual` with low confidence.
-
-### With LLM fallback (handles 100%)
-
-```python
-classifier = ProductivityClassifier(
-    api_key="sk-ant-...",   # Your Anthropic API key
-    provider="anthropic",
-)
-```
-
-Now ambiguous conversations get classified by Claude (cheapest model by default). The LLM is **only called when rules can't decide** — most conversations still use the free rule engine.
-
-## Batch Processing
-
-Classify many conversations at once and get aggregate stats:
-
-```python
+# Your week's conversations
 conversations = [
-    ("conv-1", messages_1),
-    ("conv-2", messages_2),
-    ("conv-3", messages_3),
+    ("mon-email-draft", monday_email_messages),
+    ("mon-code-review", monday_code_messages),
+    ("tue-research", tuesday_research_messages),
+    ("tue-casual", tuesday_casual_messages),
+    ("wed-doc-writing", wednesday_doc_messages),
 ]
 
 results = classifier.classify_batch(conversations)
 summary = classifier.aggregate_time_saved(results)
 
-print(summary["total_time_saved_minutes"])   # 45.0
-print(summary["productivity_rate"])           # 0.67 (67% productive)
-print(summary["by_activity"])                 # {"work_creation": 30.0, "casual": 0.0}
-print(summary["total_output_tokens"])         # 12500
+print(f"This week:")
+print(f"  {summary['total_conversations']} conversations")
+print(f"  {summary['productive_conversations']} productive ({summary['productivity_rate']:.0%})")
+print(f"  {summary['total_time_saved_minutes']} minutes saved")
+print(f"  Breakdown: {summary['by_activity']}")
 ```
 
-## Using the CLI
+### Scenario 3: Compare AI tools
 
-For quick one-off classification:
+Classify conversations from different tools to see which saves you more time:
 
-```bash
-# Single conversation
-productivity-classify conversation.json
+```python
+claude_results = classifier.classify_batch(claude_conversations)
+chatgpt_results = classifier.classify_batch(chatgpt_conversations)
 
-# Batch a directory
-productivity-classify conversations/ --output report.json
+claude_summary = classifier.aggregate_time_saved(claude_results)
+chatgpt_summary = classifier.aggregate_time_saved(chatgpt_results)
 
-# With LLM fallback
-productivity-classify conversation.json --api-key sk-ant-...
+print(f"Claude: {claude_summary['total_time_saved_minutes']} min saved")
+print(f"ChatGPT: {chatgpt_summary['total_time_saved_minutes']} min saved")
 ```
 
-See [CLI Reference](cli-reference.md) for full details.
+## Rules-Only vs LLM Mode
+
+### Rules-only (default, free, private)
+
+```python
+classifier = ProductivityClassifier()
+```
+
+Handles ~70% of conversations accurately:
+- Code written → `work_creation` (85% confidence)
+- Email sent → `work_support` (95% confidence)
+- Document created → `work_creation` (90% confidence)
+- Long unstructured chat → `casual` (80% confidence)
+
+The other ~30% (ambiguous conversations) default to `casual` with low confidence.
+
+### With LLM fallback (100% coverage)
+
+```python
+classifier = ProductivityClassifier(
+    api_key="sk-ant-...",
+    provider="anthropic",   # or "openai"
+)
+```
+
+The LLM is **only called when rules can't decide** — most conversations still use the free, private rule engine.
 
 ## Next Steps
 
 - [Architecture Guide](architecture.md) — understand the 3-layer pipeline
-- [Custom Benchmarks](custom-benchmarks.md) — tune time estimates for your org
-- [Integration Guide](integration-guide.md) — embed in your application
+- [Custom Benchmarks](custom-benchmarks.md) — tune time estimates for your workflow
+- [Integration Guide](integration-guide.md) — embed in your own tools
 - [API Reference](api-reference.md) — complete API documentation
